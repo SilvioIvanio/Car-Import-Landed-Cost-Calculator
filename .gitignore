@@ -1,0 +1,21 @@
+# Python — compiled bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments (do NOT ship the venv — it's machine-specific and heavy)
+.venv/
+venv/
+env/
+
+# Test / tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/

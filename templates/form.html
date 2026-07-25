@@ -3,74 +3,134 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Namibia Car-Import Landed-Cost Calculator</title>
+  <title>Namibia Car-Import Landed-Cost Estimate</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header class="hero">
-    <h1>Namibia Car-Import Landed-Cost Calculator</h1>
-    <p class="tag">See the <strong>real</strong> price of importing a car — FOB &rarr; CIF &rarr; landed cost, in NAD. Every line cited. Every uncertain number flagged.</p>
-  </header>
+  <div class="doc">
 
-  {% if error %}
-    <div class="error">{{ error }}</div>
-  {% endif %}
+    <header class="doc-head">
+      <div class="doc-head-row">
+        <div class="doc-title">
+          <span class="kicker">Namibia &middot; Port Clearance</span>
+          <h1>Car-Import Landed-Cost Estimate</h1>
+        </div>
+        <div class="ref">REF&nbsp;&middot;&nbsp;CC-2026-0001</div>
+      </div>
+      <p class="lede">Type the price you saw on the Japanese auction site. See what that car actually costs on the road in Windhoek — FOB &rarr; CIF &rarr; every Namibian tax and fee to the real total. Every line cited. Every uncertain number flagged.</p>
+      <div class="stamp-banner">Planning estimate &middot; not a NamRA quotation</div>
+    </header>
 
-  <main>
-    <form action="/calculate" method="post" class="calc-form">
-      <fieldset>
-        <legend>The car &amp; the price you saw</legend>
-        <label>FOB price (USD) — the auction price, before shipping
-          <input type="number" name="fob_usd" value="4000" step="any" required>
-          <small>The "cheap" number on the Japanese auction site.</small>
-        </label>
-        <label>USD &rarr; NAD exchange rate
-          <input type="number" name="fx" value="{{ fx }}" step="0.01">
-          <small>Bank of Namibia weekly rate. Edit to today's rate.</small>
-        </label>
-      </fieldset>
+    {% if error %}
+      <div class="error" role="alert">
+        <span class="error-mark">!</span>
+        <p>{{ error }}</p>
+      </div>
+    {% endif %}
 
-      <fieldset>
-        <legend>Getting it to Walvis Bay</legend>
-        <label>Ocean freight, Japan &rarr; Walvis Bay, RoRo (USD)
-          <input type="number" name="freight_usd" value="{{ freight_usd }}" step="any">
-          <small>Roll-on/Roll-off ship. Container is different.</small>
-        </label>
-      </fieldset>
+    <main>
+      <form action="/calculate" method="post" class="declaration">
 
-      <fieldset>
-        <legend>Namibian taxes (the part nobody shows you)</legend>
-        <label>Customs duty % (SACU HS 8703)
-          <input type="number" name="duty_pct" value="{{ duty_pct }}" min="{{ duty_min }}" max="{{ duty_max }}" step="0.1">
-          <small>Sources conflict: 18%&ndash;25% by engine size &amp; fuel. Default 20%. Confirm the exact subheading at etariff.namra.org.na.</small>
-        </label>
-      </fieldset>
+        <section class="stage">
+          <div class="stage-head">
+            <span class="stage-no">01</span>
+            <span class="stage-name">At the ship, Japan</span>
+            <span class="stage-hint">The price you actually saw</span>
+          </div>
+          <div class="fields">
+            <label class="field">
+              <span class="field-code">FOB&nbsp;USD</span>
+              <span class="field-label">FOB price — the auction price, before shipping</span>
+              <input type="number" name="fob_usd" value="4000" step="any" required inputmode="decimal">
+              <small>The "cheap" number on the Japanese auction site.</small>
+            </label>
+            <label class="field">
+              <span class="field-code">FX&nbsp;USD&middot;NAD</span>
+              <span class="field-label">USD &rarr; NAD exchange rate</span>
+              <input type="number" name="fx" value="{{ fx }}" step="0.01" inputmode="decimal">
+              <small>Bank of Namibia weekly rate. Edit to today's rate.</small>
+            </label>
+          </div>
+        </section>
 
-      <fieldset>
-        <legend>Fees &amp; charges (flagged — confirm with a clearing agent)</legend>
-        <label>Environmental levy (CO2 + tyres), NAD
-          <input type="number" name="env_levy_nad" value="{{ env_levy_nad }}" step="any">
-        </label>
-        <label>Walvis Bay port charges, NAD
-          <input type="number" name="port_nad" value="{{ port_nad }}" step="any">
-        </label>
-        <label>Clearing agent fee (USD)
-          <input type="number" name="clearing_usd" value="{{ clearing_usd }}" step="any">
-        </label>
-        <label>Inland transport, Walvis Bay &rarr; Windhoek, NAD
-          <input type="number" name="transport_nad" value="{{ transport_nad }}" step="any">
-        </label>
-        <label>NaTIS registration + licensing + plates, NAD
-          <input type="number" name="natis_nad" value="{{ natis_nad }}" step="any">
-        </label>
-      </fieldset>
+        <section class="stage">
+          <div class="stage-head">
+            <span class="stage-no">02</span>
+            <span class="stage-name">To Walvis Bay</span>
+            <span class="stage-hint">Getting the car across the ocean</span>
+          </div>
+          <div class="fields">
+            <label class="field">
+              <span class="field-code">FREIGHT&nbsp;USD</span>
+              <span class="field-label">Ocean freight, Japan &rarr; Walvis Bay, RoRo</span>
+              <input type="number" name="freight_usd" value="{{ freight_usd }}" step="any" inputmode="decimal">
+              <small>Roll-on / Roll-off ship. Container is different.</small>
+            </label>
+          </div>
+        </section>
 
-      <button type="submit">Show me the real landed cost &rarr;</button>
-    </form>
-  </main>
+        <section class="stage">
+          <div class="stage-head">
+            <span class="stage-no">03</span>
+            <span class="stage-name">At the border</span>
+            <span class="stage-hint">The Namibian taxes nobody shows you</span>
+          </div>
+          <div class="fields">
+            <label class="field">
+              <span class="field-code">DUTY&nbsp;%</span>
+              <span class="field-label">Customs duty (SACU HS 8703)</span>
+              <input type="number" name="duty_pct" value="{{ duty_pct }}" min="{{ duty_min }}" max="{{ duty_max }}" step="0.1" inputmode="decimal">
+              <small>Sources conflict: 18%&ndash;25% by engine size &amp; fuel. Default 20%. Confirm the exact subheading at etariff.namra.org.na.</small>
+            </label>
+          </div>
+        </section>
 
-  <footer>
-    <p>Built by Harambee Hub for the AWS "For The People" Hackathon. Every number cited in the result. This is a planning estimate, not a NamRA quotation — confirm with a clearing agent.</p>
-  </footer>
+        <section class="stage">
+          <div class="stage-head">
+            <span class="stage-no">04</span>
+            <span class="stage-name">On the road, Windhoek</span>
+            <span class="stage-hint">Fees &amp; charges — confirm with a clearing agent</span>
+          </div>
+          <div class="fields fields-grid">
+            <label class="field">
+              <span class="field-code">ENV&nbsp;NAD</span>
+              <span class="field-label">Environmental levy (CO2 + tyres)</span>
+              <input type="number" name="env_levy_nad" value="{{ env_levy_nad }}" step="any" inputmode="decimal">
+            </label>
+            <label class="field">
+              <span class="field-code">PORT&nbsp;NAD</span>
+              <span class="field-label">Walvis Bay port charges</span>
+              <input type="number" name="port_nad" value="{{ port_nad }}" step="any" inputmode="decimal">
+            </label>
+            <label class="field">
+              <span class="field-code">CLEAR&nbsp;USD</span>
+              <span class="field-label">Clearing agent fee</span>
+              <input type="number" name="clearing_usd" value="{{ clearing_usd }}" step="any" inputmode="decimal">
+            </label>
+            <label class="field">
+              <span class="field-code">TRANSPORT&nbsp;NAD</span>
+              <span class="field-label">Inland transport, Walvis Bay &rarr; Windhoek</span>
+              <input type="number" name="transport_nad" value="{{ transport_nad }}" step="any" inputmode="decimal">
+            </label>
+            <label class="field">
+              <span class="field-code">NATIS&nbsp;NAD</span>
+              <span class="field-label">NaTIS registration + licensing + plates</span>
+              <input type="number" name="natis_nad" value="{{ natis_nad }}" step="any" inputmode="decimal">
+            </label>
+          </div>
+        </section>
+
+        <button type="submit" class="submit">Stamp the landed cost &rarr;</button>
+      </form>
+    </main>
+
+    <footer class="doc-foot">
+      <p>Built by Harambee Hub for the AWS "For The People" Hackathon. Every number cited in the result. Planning estimate, not a NamRA quotation — confirm with a clearing agent.</p>
+    </footer>
+
+  </div>
 </body>
 </html>
