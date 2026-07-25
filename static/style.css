@@ -1,0 +1,116 @@
+/* Harambee Hub — Namibia Car-Import Landed-Cost Calculator
+   Anselmo: this is yours. Make it beautiful. The structure is:
+   .hero (top banner) · .calc-form / fieldsets (the input form) ·
+   .breakdown table (the result) · .summary · .verify-banner · .actions
+   Palette idea: deep navy + warm gold (Namibian dune) on white. Clean, confident. */
+
+:root {
+  --navy: #0b2a4a;
+  --gold: #d9a441;
+  --ink: #1a1a1a;
+  --muted: #6b6b6b;
+  --line: #e3e3e3;
+  --bg: #fafafa;
+  --flag-verified: #1b8a4f;
+  --flag-range: #c47a00;
+  --flag-confirm-with-agent: #b3321c;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+.hero {
+  background: var(--navy);
+  color: #fff;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+.hero h1 { margin: 0 0 .5rem; font-size: 1.6rem; }
+.hero .tag { margin: 0 auto; max-width: 640px; color: #d7e3ef; }
+.hero .tag strong { color: var(--gold); }
+
+main { max-width: 820px; margin: 1.5rem auto; padding: 0 1rem; }
+
+.verify-banner {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: .75rem 1rem;
+  background: #fff7e6;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  color: #6b4a10;
+  font-size: .9rem;
+}
+
+/* ---- form ---- */
+.calc-form fieldset {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  background: #fff;
+}
+.calc-form legend { font-weight: 600; color: var(--navy); padding: 0 .5rem; }
+.calc-form label { display: block; margin: .75rem 0; font-size: .95rem; }
+.calc-form input {
+  display: block;
+  width: 100%;
+  padding: .6rem .7rem;
+  margin: .35rem 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+.calc-form small { display: block; color: var(--muted); font-size: .82rem; }
+.calc-form button {
+  width: 100%;
+  padding: .9rem;
+  background: var(--gold);
+  color: #1a1a1a;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.calc-form button:hover { filter: brightness(1.05); }
+
+.error { max-width: 820px; margin: 1rem auto; padding: 1rem; background: #fdecea; border-radius: 6px; }
+
+/* ---- result ---- */
+.breakdown { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
+.breakdown th, .breakdown td { padding: .7rem .9rem; text-align: left; border-bottom: 1px solid var(--line); font-size: .95rem; }
+.breakdown th { background: #f3f6f9; color: var(--navy); font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; }
+.breakdown .amt { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.breakdown .src { color: var(--muted); font-size: .85rem; max-width: 260px; }
+.breakdown .cif-row { background: #f7fbff; }
+.breakdown .total-row { background: var(--navy); color: #fff; font-weight: 700; font-size: 1.05rem; }
+.breakdown .total-row .src { color: #cfe0ee; }
+
+.flag { font-size: .78rem; padding: .15rem .5rem; border-radius: 999px; white-space: nowrap; }
+.flag-verified { background: #e6f4ec; color: var(--flag-verified); }
+.flag-range { background: #fdf0dd; color: var(--flag-range); }
+.flag-confirm-with-agent { background: #fbe7e4; color: var(--flag-confirm-with-agent); }
+
+.summary { margin: 1.5rem 0; padding: 1.25rem; background: #fff; border-left: 4px solid var(--gold); border-radius: 4px; }
+.summary p { margin: .35rem 0; }
+.summary .gap { font-size: 1.1rem; color: var(--navy); }
+
+.actions { margin: 1.5rem 0; display: flex; gap: 1rem; align-items: center; }
+.actions button { padding: .7rem 1.25rem; background: var(--navy); color: #fff; border: none; border-radius: 6px; font-size: .95rem; cursor: pointer; }
+.actions a { color: var(--navy); text-decoration: none; font-weight: 600; }
+
+footer { text-align: center; padding: 2rem 1rem; color: var(--muted); font-size: .85rem; }
+
+@media print {
+  .hero { padding: 1rem; }
+  .actions, footer .noprint { display: none; }
+  .verify-banner { border-color: #999; }
+}

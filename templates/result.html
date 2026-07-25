@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your Landed Cost — Namibia Car-Import Calculator</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>Your Real Landed Cost</h1>
+    <p class="tag">FOB <strong>{{ meta.fob_usd|round(0)|int }} USD</strong> &rarr; landed cost <strong>{{ "NAD {:,.0f}".format(total) }}</strong>. That is the gap that burns buyers.</p>
+  </header>
+
+  <div class="verify-banner">
+    &#9888; Planning estimate, not a NamRA quotation. Lines flagged <em>confirm-with-agent</em> must be checked with a Walvis Bay clearing agent before you pay. Every line cites its source below.
+  </div>
+
+  <main>
+    <table class="breakdown">
+      <thead>
+        <tr><th>Component</th><th>Amount (NAD)</th><th>Source</th><th>Confidence</th></tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+        <tr class="{% if line.key == 'landed' %}total-row{% endif %} {% if line.key == 'cif' %}cif-row{% endif %}">
+          <td>{{ line.label }}</td>
+          <td class="amt">{{ "NAD {:,.0f}".format(line.amount) }}</td>
+          <td class="src">{{ line.source }}</td>
+          <td class="flag flag-{{ line.flag }}">{{ line.flag }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="summary">
+      <p>You saw: <strong>{{ meta.fob_usd|round(0)|int }} USD</strong> FOB &asymp; <strong>{{ "NAD {:,.0f}".format(meta.fob_nad) }}</strong>.</p>
+      <p>The real total on the road in Windhoek: <strong>{{ "NAD {:,.0f}".format(total) }}</strong>.</p>
+      <p class="gap">The gap: <strong>{{ "NAD {:,.0f}".format(total - meta.fob_nad) }}</strong> of costs the FOB price never showed you.</p>
+    </div>
+
+    <div class="actions">
+      <button onclick="window.print()">Print / Save as PDF</button>
+      <a href="/">&larr; Try another car</a>
+    </div>
+  </main>
+
+  <footer>
+    <p>Built by Harambee Hub for the AWS "For The People" Hackathon. Sources cited per line. This is a planning estimate — confirm with NamRA / a clearing agent.</p>
+  </footer>
+</body>
+</html>
