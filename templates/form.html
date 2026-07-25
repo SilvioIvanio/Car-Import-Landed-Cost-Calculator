@@ -75,7 +75,7 @@
             <input type="number" class="fx-input" name="fx" value="{{ fx }}" step="0.01" inputmode="decimal">
             <button type="button" class="fx-btn" onclick="fetchRate(this)">Use today's rate</button>
           </div>
-          <small>Default is an indicative rate. Click to pull today's live rate (exchangerate-api).</small>
+          <small>Default is an indicative rate. Click to pull today's live rate.</small>
         </div>
 
         <button type="submit" class="submit">Show me the real landed cost &rarr;</button>
@@ -209,8 +209,7 @@
 
     // live FX: free, no-key, graceful fallback to manual entry
     async function fetchRate(btn) {
-      const original = btn.textContent;
-      btn.disabled = true; btn.textContent = 'fetching...';
+      btn.disabled = true; btn.textContent = "Getting today's rate…";
       try {
         const r = await fetch('https://open.er-api.com/v6/latest/USD');
         const d = await r.json();
@@ -218,10 +217,10 @@
         if (!nad) throw new Error('no NAD rate');
         const v = (Math.round(nad * 100) / 100);
         document.querySelectorAll('.fx-input').forEach(f => f.value = v);
-        btn.textContent = 'live: ' + nad.toFixed(2) + ' · exchangerate-api';
+        btn.textContent = "1 USD = " + v.toFixed(2) + " NAD today";
         btn.classList.add('ok');
       } catch (e) {
-        btn.textContent = 'unavailable — type the rate';
+        btn.textContent = "Couldn't reach it — type the rate yourself";
         btn.classList.add('err');
       }
       setTimeout(() => { btn.disabled = false; }, 1500);
