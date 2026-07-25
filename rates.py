@@ -120,7 +120,7 @@ NATIS_NAD = {
 # Each: key, label, source, flag. The calc fills in the amount.
 LANDED_COST_LINES = [
     ("fob",          "FOB price (vehicle at the ship, Japan)",        "User input",                                   "verified"),
-    ("freight",      "Ocean freight, Japan -> Walvis Bay (RoRo)",     FREIGHT_USD["source"],                          FREIGHT_USD["flag"]),
+    ("freight",      "Ocean freight, origin -> Walvis Bay (RoRo)",    FREIGHT_USD["source"],                          FREIGHT_USD["flag"]),
     ("insurance",    "Marine insurance",                              INSURANCE_PCT["source"],                        INSURANCE_PCT["flag"]),
     ("cif",          "CIF value (FOB + freight + insurance)",        "Wikipedia FOB/CIF",                            "verified"),
     ("duty",         "Customs duty (SACU HS 8703)",                  DUTY_PCT["source"],                             DUTY_PCT["flag"]),

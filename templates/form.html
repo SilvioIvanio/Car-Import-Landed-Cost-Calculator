@@ -10,63 +10,125 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="doc">
-
-    <header class="doc-head">
-      <div class="doc-head-row">
-        <div class="doc-title">
-          <span class="kicker">Namibia &middot; Port Clearance</span>
-          <h1>Car-Import Landed-Cost Estimate</h1>
-        </div>
-        <div class="ref">REF&nbsp;&middot;&nbsp;CC-2026-0001</div>
-      </div>
-      <p class="lede">Type the price you saw on the Japanese auction site. See what that car actually costs on the road in Windhoek — FOB &rarr; CIF &rarr; every Namibian tax and fee to the real total. Every line cited. Every uncertain number flagged.</p>
+  <header class="doc-head">
+    <div class="head-inner">
+      <span class="kicker">Namibia &middot; Car-Import Landed-Cost Estimate</span>
+      <h1>What will that car really cost me?</h1>
+      <p class="lede">Type the price you saw. See what the car actually costs on the road in Windhoek &mdash; FOB or CIF, every Namibian tax and fee, to one honest total. Every line cited. Every uncertain number flagged.</p>
       <div class="stamp-banner">Planning estimate &middot; not a NamRA quotation</div>
-    </header>
+    </div>
+  </header>
 
-    {% if error %}
-      <div class="error" role="alert">
-        <span class="error-mark">!</span>
-        <p>{{ error }}</p>
+  {% if error %}
+    <div class="error" role="alert">
+      <span class="error-mark">!</span>
+      <p>{{ error }}</p>
+    </div>
+  {% endif %}
+
+  <main class="main-inner">
+    <form action="/calculate" method="post" class="declaration">
+
+      <div class="mode-switch" role="tablist" aria-label="Mode">
+        <button type="button" class="mode-btn active" data-mode="simple" role="tab" aria-selected="true">Simple <small>just the price</small></button>
+        <button type="button" class="mode-btn" data-mode="advanced" role="tab" aria-selected="false">Advanced <small>every line, for brokers</small></button>
       </div>
-    {% endif %}
 
-    <main>
-      <form action="/calculate" method="post" class="declaration">
+      <!-- ============ SIMPLE ============ -->
+      <section class="mode-panel" id="panel-simple" data-panel="simple">
+        <p class="mode-blurb">You saw a price. You want the real number. That's it.</p>
+
+        <div class="field big">
+          <span class="field-code">PRICE&nbsp;USD</span>
+          <span class="field-label">The price you saw</span>
+          <input type="number" name="price_usd" value="4000" step="any" required inputmode="decimal" placeholder="e.g. 4000">
+        </div>
+
+        <div class="field">
+          <span class="field-code">PRICE&nbsp;TYPE</span>
+          <span class="field-label">Is that price FOB or CIF?</span>
+          <div class="seg" data-toggle="price_type">
+            <button type="button" class="seg-btn active" data-val="fob">FOB <small>at the ship</small></button>
+            <button type="button" class="seg-btn" data-val="cif">CIF <small>to Walvis Bay</small></button>
+          </div>
+          <input type="hidden" name="price_type" value="fob">
+          <small>FOB = the auction price, before shipping. CIF = the car already at Walvis Bay, freight &amp; insurance included. Not sure? It's almost always FOB on the auction sites.</small>
+        </div>
+
+        <div class="field">
+          <span class="field-code">FROM</span>
+          <span class="field-label">Where is the car coming from?</span>
+          <select name="origin" class="select">
+            <option value="Japan">Japan</option>
+            <option value="Singapore">Singapore</option>
+            <option value="the UK">the United Kingdom</option>
+            <option value="South Africa">South Africa</option>
+            <option value="the origin port">Other</option>
+          </select>
+          <small>Most used cars arrive from Japan. The freight is a flat RoRo estimate either way &mdash; confirm with a shipper for the real quote.</small>
+        </div>
+
+        <div class="field">
+          <span class="field-code">FX&nbsp;USD&middot;NAD</span>
+          <span class="field-label">USD &rarr; NAD rate</span>
+          <div class="fx-row">
+            <input type="number" class="fx-input" name="fx" value="{{ fx }}" step="0.01" inputmode="decimal">
+            <button type="button" class="fx-btn" onclick="fetchRate(this)">Use today's rate</button>
+          </div>
+          <small>Default is an indicative rate. Click to pull today's live rate (exchangerate-api).</small>
+        </div>
+
+        <button type="submit" class="submit">Show me the real landed cost &rarr;</button>
+      </section>
+
+      <!-- ============ ADVANCED ============ -->
+      <section class="mode-panel hidden" id="panel-advanced" data-panel="advanced" disabled>
+        <p class="mode-blurb">Every line, every source, every flag. Edit any rate you have a real quote for.</p>
+
+        <div class="field">
+          <span class="field-code">FROM</span>
+          <span class="field-label">Origin</span>
+          <select name="origin" class="select" disabled>
+            <option value="Japan">Japan</option>
+            <option value="Singapore">Singapore</option>
+            <option value="the UK">the United Kingdom</option>
+            <option value="South Africa">South Africa</option>
+            <option value="the origin port">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <span class="field-code">FX&nbsp;USD&middot;NAD</span>
+          <span class="field-label">USD &rarr; NAD rate</span>
+          <div class="fx-row">
+            <input type="number" class="fx-input" name="fx" value="{{ fx }}" step="0.01" inputmode="decimal" disabled>
+            <button type="button" class="fx-btn" onclick="fetchRate(this)" disabled>Use today's rate</button>
+          </div>
+        </div>
 
         <section class="stage">
           <div class="stage-head">
-            <span class="stage-no">01</span>
-            <span class="stage-name">At the ship, Japan</span>
-            <span class="stage-hint">The price you actually saw</span>
+            <span class="stage-no">01</span><span class="stage-name">At the ship, origin</span><span class="stage-hint">The price you saw</span>
           </div>
           <div class="fields">
             <label class="field">
               <span class="field-code">FOB&nbsp;USD</span>
-              <span class="field-label">FOB price — the auction price, before shipping</span>
-              <input type="number" name="fob_usd" value="4000" step="any" required inputmode="decimal">
-              <small>The "cheap" number on the Japanese auction site.</small>
-            </label>
-            <label class="field">
-              <span class="field-code">FX&nbsp;USD&middot;NAD</span>
-              <span class="field-label">USD &rarr; NAD exchange rate</span>
-              <input type="number" name="fx" value="{{ fx }}" step="0.01" inputmode="decimal">
-              <small>Bank of Namibia weekly rate. Edit to today's rate.</small>
+              <span class="field-label">FOB price &mdash; the auction price, before shipping</span>
+              <input type="number" name="fob_usd" value="4000" step="any" inputmode="decimal" disabled>
+              <small>The "cheap" number on the auction site.</small>
             </label>
           </div>
         </section>
 
         <section class="stage">
           <div class="stage-head">
-            <span class="stage-no">02</span>
-            <span class="stage-name">To Walvis Bay</span>
-            <span class="stage-hint">Getting the car across the ocean</span>
+            <span class="stage-no">02</span><span class="stage-name">To Walvis Bay</span><span class="stage-hint">Getting it across the ocean</span>
           </div>
           <div class="fields">
             <label class="field">
               <span class="field-code">FREIGHT&nbsp;USD</span>
-              <span class="field-label">Ocean freight, Japan &rarr; Walvis Bay, RoRo</span>
-              <input type="number" name="freight_usd" value="{{ freight_usd }}" step="any" inputmode="decimal">
+              <span class="field-label">Ocean freight, origin &rarr; Walvis Bay, RoRo</span>
+              <input type="number" name="freight_usd" value="{{ freight_usd }}" step="any" inputmode="decimal" disabled>
               <small>Roll-on / Roll-off ship. Container is different.</small>
             </label>
           </div>
@@ -74,15 +136,13 @@
 
         <section class="stage">
           <div class="stage-head">
-            <span class="stage-no">03</span>
-            <span class="stage-name">At the border</span>
-            <span class="stage-hint">The Namibian taxes nobody shows you</span>
+            <span class="stage-no">03</span><span class="stage-name">At the border</span><span class="stage-hint">The Namibian taxes nobody shows you</span>
           </div>
           <div class="fields">
             <label class="field">
               <span class="field-code">DUTY&nbsp;%</span>
               <span class="field-label">Customs duty (SACU HS 8703)</span>
-              <input type="number" name="duty_pct" value="{{ duty_pct }}" min="{{ duty_min }}" max="{{ duty_max }}" step="0.1" inputmode="decimal">
+              <input type="number" name="duty_pct" value="{{ duty_pct }}" min="{{ duty_min }}" max="{{ duty_max }}" step="0.1" inputmode="decimal" disabled>
               <small>Sources conflict: 18%&ndash;25% by engine size &amp; fuel. Default 20%. Confirm the exact subheading at etariff.namra.org.na.</small>
             </label>
           </div>
@@ -90,47 +150,82 @@
 
         <section class="stage">
           <div class="stage-head">
-            <span class="stage-no">04</span>
-            <span class="stage-name">On the road, Windhoek</span>
-            <span class="stage-hint">Fees &amp; charges — confirm with a clearing agent</span>
+            <span class="stage-no">04</span><span class="stage-name">On the road, Windhoek</span><span class="stage-hint">Fees &amp; charges &mdash; confirm with a clearing agent</span>
           </div>
           <div class="fields fields-grid">
-            <label class="field">
-              <span class="field-code">ENV&nbsp;NAD</span>
-              <span class="field-label">Environmental levy (CO2 + tyres)</span>
-              <input type="number" name="env_levy_nad" value="{{ env_levy_nad }}" step="any" inputmode="decimal">
-            </label>
-            <label class="field">
-              <span class="field-code">PORT&nbsp;NAD</span>
-              <span class="field-label">Walvis Bay port charges</span>
-              <input type="number" name="port_nad" value="{{ port_nad }}" step="any" inputmode="decimal">
-            </label>
-            <label class="field">
-              <span class="field-code">CLEAR&nbsp;USD</span>
-              <span class="field-label">Clearing agent fee</span>
-              <input type="number" name="clearing_usd" value="{{ clearing_usd }}" step="any" inputmode="decimal">
-            </label>
-            <label class="field">
-              <span class="field-code">TRANSPORT&nbsp;NAD</span>
-              <span class="field-label">Inland transport, Walvis Bay &rarr; Windhoek</span>
-              <input type="number" name="transport_nad" value="{{ transport_nad }}" step="any" inputmode="decimal">
-            </label>
-            <label class="field">
-              <span class="field-code">NATIS&nbsp;NAD</span>
-              <span class="field-label">NaTIS registration + licensing + plates</span>
-              <input type="number" name="natis_nad" value="{{ natis_nad }}" step="any" inputmode="decimal">
-            </label>
+            <label class="field"><span class="field-code">ENV&nbsp;NAD</span><span class="field-label">Environmental levy (CO2 + tyres)</span><input type="number" name="env_levy_nad" value="{{ env_levy_nad }}" step="any" inputmode="decimal" disabled></label>
+            <label class="field"><span class="field-code">PORT&nbsp;NAD</span><span class="field-label">Walvis Bay port charges</span><input type="number" name="port_nad" value="{{ port_nad }}" step="any" inputmode="decimal" disabled></label>
+            <label class="field"><span class="field-code">CLEAR&nbsp;USD</span><span class="field-label">Clearing agent fee</span><input type="number" name="clearing_usd" value="{{ clearing_usd }}" step="any" inputmode="decimal" disabled></label>
+            <label class="field"><span class="field-code">TRANSPORT&nbsp;NAD</span><span class="field-label">Inland transport, Walvis Bay &rarr; Windhoek</span><input type="number" name="transport_nad" value="{{ transport_nad }}" step="any" inputmode="decimal" disabled></label>
+            <label class="field"><span class="field-code">NATIS&nbsp;NAD</span><span class="field-label">NaTIS registration + licensing + plates</span><input type="number" name="natis_nad" value="{{ natis_nad }}" step="any" inputmode="decimal" disabled></label>
           </div>
         </section>
 
-        <button type="submit" class="submit">Stamp the landed cost &rarr;</button>
-      </form>
-    </main>
+        <button type="submit" class="submit">Show me the real landed cost &rarr;</button>
+      </section>
 
-    <footer class="doc-foot">
-      <p>Built by Harambee Hub for the AWS "For The People" Hackathon. Every number cited in the result. Planning estimate, not a NamRA quotation — confirm with a clearing agent.</p>
-    </footer>
+    </form>
+  </main>
 
-  </div>
+  <footer class="doc-foot">
+    <p>Built by Harambee Hub for the AWS "For The People" Hackathon. Every number cited in the result. Planning estimate, not a NamRA quotation &mdash; confirm with a clearing agent.</p>
+  </footer>
+
+  <script>
+    // mode switch: simple vs advanced. Disabled inputs are not submitted,
+    // so the calc only ever sees one entry shape at a time.
+    const panels = document.querySelectorAll('.mode-panel');
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        document.querySelectorAll('.mode-btn').forEach(b => {
+          const on = b === btn;
+          b.classList.toggle('active', on);
+          b.setAttribute('aria-selected', on);
+        });
+        panels.forEach(p => {
+          const on = p.dataset.panel === mode;
+          p.classList.toggle('hidden', !on);
+          p.querySelectorAll('input, select, button').forEach(el => {
+            if (el.classList.contains('mode-btn')) return;
+            if (on) el.removeAttribute('disabled');
+            else el.setAttribute('disabled', '');
+          });
+        });
+      });
+    });
+
+    // FOB / CIF segmented toggle (simple mode) -> hidden input
+    document.querySelectorAll('[data-toggle]').forEach(group => {
+      const hidden = group.parentElement.querySelector('input[type=hidden]');
+      group.querySelectorAll('.seg-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          group.querySelectorAll('.seg-btn').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          if (hidden) hidden.value = b.dataset.val;
+        });
+      });
+    });
+
+    // live FX: free, no-key, graceful fallback to manual entry
+    async function fetchRate(btn) {
+      const original = btn.textContent;
+      btn.disabled = true; btn.textContent = 'fetching...';
+      try {
+        const r = await fetch('https://open.er-api.com/v6/latest/USD');
+        const d = await r.json();
+        const nad = d && d.rates && d.rates.NAD;
+        if (!nad) throw new Error('no NAD rate');
+        const v = (Math.round(nad * 100) / 100);
+        document.querySelectorAll('.fx-input').forEach(f => f.value = v);
+        btn.textContent = 'live: ' + nad.toFixed(2) + ' · exchangerate-api';
+        btn.classList.add('ok');
+      } catch (e) {
+        btn.textContent = 'unavailable — type the rate';
+        btn.classList.add('err');
+      }
+      setTimeout(() => { btn.disabled = false; }, 1500);
+    }
+  </script>
 </body>
 </html>

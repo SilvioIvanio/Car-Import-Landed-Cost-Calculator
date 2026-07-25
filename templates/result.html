@@ -10,75 +10,70 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <div class="doc">
-
-    <header class="doc-head">
-      <div class="doc-head-row">
-        <div class="doc-title">
-          <span class="kicker">Namibia &middot; Port Clearance</span>
-          <h1>Your Landed-Cost Estimate</h1>
-        </div>
-        <div class="ref">REF&nbsp;&middot;&nbsp;CC-2026-0001</div>
-      </div>
+  <header class="doc-head">
+    <div class="head-inner">
+      <span class="kicker">Namibia &middot; Car-Import Landed-Cost Estimate</span>
+      <h1>Your real landed cost</h1>
       <div class="stamp-banner">Planning estimate &middot; not a NamRA quotation</div>
-    </header>
+    </div>
+  </header>
 
-    <main>
-      <section class="saw-vs-pay">
-        <div class="saw">
-          <span class="saw-label">You saw</span>
-          <span class="saw-num">{{ meta.fob_usd|round(0)|int }}<small>USD FOB</small></span>
-          <span class="saw-nad">&asymp; {{ "NAD {:,.0f}".format(meta.fob_nad) }}</span>
-        </div>
-        <div class="arrow">&rarr;</div>
-        <div class="pay">
-          <span class="pay-label">You pay, on the road</span>
-          <span class="pay-num">{{ "NAD {:,.0f}".format(total) }}</span>
-        </div>
-      </section>
-
-      <table class="breakdown">
-        <thead>
-          <tr>
-            <th class="c-code">code</th>
-            <th class="c-label">component</th>
-            <th class="c-amt">amount (NAD)</th>
-            <th class="c-src">source</th>
-            <th class="c-flag">confidence</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for line in lines %}
-          <tr class="row {% if line.key == 'landed' %}total-row{% endif %}{% if line.key == 'cif' %} cif-row{% endif %}">
-            <td class="c-code">{{ line.key|upper }}</td>
-            <td class="c-label">{{ line.label }}</td>
-            <td class="c-amt">{{ "NAD {:,.0f}".format(line.amount) }}</td>
-            <td class="c-src">{{ line.source }}</td>
-            <td class="c-flag"><span class="flag flag-{{ line.flag }}">{{ line.flag }}</span></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-      <section class="gap-stamp-wrap">
-        <div class="gap-stamp" aria-label="The gap between the FOB price you saw and the real landed cost">
-          <span class="gap-stamp-mark">GAP</span>
-          <span class="gap-stamp-amt">+{{ "NAD {:,.0f}".format(total - meta.fob_nad) }}</span>
-          <span class="gap-stamp-note">what the FOB price never showed you</span>
-        </div>
-        <p class="gap-caption">That gap is the whole reason this exists. A cheap FOB price is not a cheap car.</p>
-      </section>
-
-      <div class="actions">
-        <button class="print" onclick="window.print()">Print / Save as PDF</button>
-        <a href="/">&larr; Try another car</a>
+  <main class="main-inner">
+    <section class="saw-vs-pay">
+      <div class="saw">
+        <span class="saw-label">You saw</span>
+        <span class="saw-num">{{ meta.saw_usd|round(0)|int }}<small>{{ meta.saw_label }} USD</small></span>
+        <span class="saw-nad">from {{ meta.origin }} &middot; &asymp; {{ "NAD {:,.0f}".format(meta.saw_nad) }}</span>
       </div>
-    </main>
+      <div class="arrow">&rarr;</div>
+      <div class="pay">
+        <span class="pay-label">You pay, on the road</span>
+        <span class="pay-num">{{ "NAD {:,.0f}".format(total) }}</span>
+      </div>
+    </section>
 
-    <footer class="doc-foot">
-      <p>Built by Harambee Hub for the AWS "For The People" Hackathon. Sources cited per line. Planning estimate — confirm with NamRA / a clearing agent.</p>
-    </footer>
+    <table class="breakdown">
+      <thead>
+        <tr>
+          <th class="c-code">code</th>
+          <th class="c-label">component</th>
+          <th class="c-amt">amount (NAD)</th>
+          <th class="c-src">source</th>
+          <th class="c-flag">confidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+        <tr class="row {% if line.key == 'landed' %}total-row{% endif %}{% if line.key == 'cif' %} cif-row{% endif %}{% if meta.price_type == 'cif' and line.key in ('fob','freight','insurance') %} incl{% endif %}">
+          <td class="c-code">{{ line.key|upper }}</td>
+          <td class="c-label">{{ line.label }}</td>
+          <td class="c-amt">
+            {% if meta.price_type == 'cif' and line.key in ('fob','freight','insurance') %}<span class="incl-in">incl. in CIF</span>{% else %}{{ "NAD {:,.0f}".format(line.amount) }}{% endif %}
+          </td>
+          <td class="c-src">{{ line.source }}</td>
+          <td class="c-flag"><span class="flag flag-{{ line.flag }}">{{ line.flag }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-  </div>
+    <section class="gap-stamp-wrap">
+      <div class="gap-stamp" aria-label="The gap between the price you saw and the real landed cost">
+        <span class="gap-stamp-mark">GAP</span>
+        <span class="gap-stamp-amt">+{{ "NAD {:,.0f}".format(total - meta.saw_nad) }}</span>
+        <span class="gap-stamp-note">what the {{ meta.saw_label }} price never showed you</span>
+      </div>
+      <p class="gap-caption">That gap is the whole reason this exists. A cheap {{ meta.saw_label }} price is not a cheap car.</p>
+    </section>
+
+    <div class="actions">
+      <button class="print" onclick="window.print()">Print / Save as PDF</button>
+      <a href="/">&larr; Try another car</a>
+    </div>
+  </main>
+
+  <footer class="doc-foot">
+    <p>Built by Harambee Hub for the AWS "For The People" Hackathon. Sources cited per line. Planning estimate &mdash; confirm with NamRA / a clearing agent.</p>
+  </footer>
 </body>
 </html>

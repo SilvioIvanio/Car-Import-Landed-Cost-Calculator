@@ -114,6 +114,50 @@ def test_zero_fees_floor_case():
     assert total >= a["cif"], "landed cost below CIF even with zero fees"
 
 
+# ---- the CIF branch: a CIF price already includes freight + insurance ------
+# If a buyer saw a CIF price (car already at Walvis Bay) and we treated it as
+# FOB, we would add freight + insurance AGAIN -- a wrong number. The CIF branch
+# must NOT add them. Hand-computed (price_usd 5000 CIF, fx 18.5):
+#   cif = 5000 * 18.5 = 92500.0 ; fob = freight = insurance = 0
+#   duty = 92500 * 20% = 18500 ; vat = (92500*1.10 + 18500) * 15% = 18037.5
+#   landed = 92500 + 18500 + 1873.125 + 18037.5 + 4995 + 3500 + 1200 = 140605.625
+def cif_form(**overrides):
+    form = {
+        "price_usd": "5000",
+        "price_type": "cif",
+        "fx": "18.5",
+        "duty_pct": "20.0",
+        "env_levy_nad": "0",
+        "port_nad": "0",
+        "clearing_usd": "270",
+        "transport_nad": "3500",
+        "natis_nad": "1200",
+    }
+    form.update({k: str(v) for k, v in overrides.items()})
+    return form
+
+
+def test_cif_price_does_not_double_count_freight_and_insurance():
+    display, total, meta = app.calc_landed_cost(cif_form())
+    assert display is not None, "calc returned no display for CIF input"
+
+    a = amounts(display)
+    # freight + insurance are bundled in the CIF price, not added again
+    assert a["fob"] == 0
+    assert a["freight"] == 0
+    assert a["insurance"] == 0
+    assert abs(a["cif"] - 92500.0) < 0.01
+    assert abs(a["duty"] - 18500.0) < 0.01
+    assert abs(a["vat"] - 18037.5) < 0.01
+    assert abs(total - 140605.625) < 0.01
+    assert meta["price_type"] == "cif"
+
+
+def test_cif_invariant_holds_at_duty_25_percent():
+    ratio = _import_tax_ratio(cif_form(duty_pct="25.0"))
+    assert 0.38 <= ratio <= 0.48, f"import tax / CIF out of range (CIF, 25%): {ratio}"
+
+
 # ---- the error path: non-numeric input is caught, not silently wrong -----
 # A user who types "abc" as the price must get a clear error, never a silent
 # wrong total. The calc returns (None, 0, {"error": ...}).

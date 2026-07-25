@@ -34,24 +34,62 @@ app = Flask(__name__)
 
 def calc_landed_cost(form):
     """Run the landed-cost calc from form inputs. Returns (lines, total, meta).
-    Each line = (key, label, amount_nad, source, flag)."""
+    Each line = (key, label, amount_nad, source, flag).
+
+    Two entry shapes, both accepted:
+      - Simple:  price_usd + price_type ("fob"|"cif") + fx. Granular fields fall
+                 back to rate-table defaults. A CIF price is the car already at
+                 Walvis Bay, so freight + insurance are bundled in it (not added
+                 again) -- treating a CIF price as FOB would double-count freight.
+      - Advanced: fob_usd + freight_usd + every fee field (the broker's view).
+    The post-CIF math (duty, excise, VAT, fees, landed) is identical either way.
+    """
     try:
-        fob_usd       = float(form.get("fob_usd", 0))
         fx            = float(form.get("fx", R.FX_USD_NAD["value"]))
-        freight_usd   = float(form.get("freight_usd", R.FREIGHT_USD["value"]))
         duty_pct      = float(form.get("duty_pct", R.DUTY_PCT["value"]))
         env_levy_nad  = float(form.get("env_levy_nad", R.ENV_LEVY_NAD["value"]))
         port_nad      = float(form.get("port_nad", R.PORT_NAD["value"]))
         clearing_usd  = float(form.get("clearing_usd", R.CLEARING_USD["value"]))
         transport_nad = float(form.get("transport_nad", R.TRANSPORT_NAD["value"]))
         natis_nad     = float(form.get("natis_nad", R.NATIS_NAD["value"]))
+        fob_usd       = float(form.get("fob_usd", 0))
+        freight_usd   = float(form.get("freight_usd", R.FREIGHT_USD["value"]))
+        price_type    = form.get("price_type", "fob").lower()
+        origin        = form.get("origin", "the origin port")
     except ValueError:
         return None, 0, {"error": "Please enter valid numbers."}
 
-    fob_nad      = fob_usd * fx
-    freight_nad  = freight_usd * fx
-    insurance_nad = (fob_nad + freight_nad) * (R.INSURANCE_PCT["value"] / 100.0)
-    cif_nad      = fob_nad + freight_nad + insurance_nad
+    price_usd_raw = form.get("price_usd")
+    if price_usd_raw not in (None, ""):
+        # ---- simple entry: one price, FOB or CIF ----
+        try:
+            price_usd = float(price_usd_raw)
+        except ValueError:
+            return None, 0, {"error": "Please enter a valid price."}
+        if price_type == "cif":
+            cif_nad = price_usd * fx
+            fob_nad = freight_nad = insurance_nad = 0.0
+        else:  # fob
+            fob_nad = price_usd * fx
+            freight_nad = freight_usd * fx
+            insurance_nad = (fob_nad + freight_nad) * (R.INSURANCE_PCT["value"] / 100.0)
+            cif_nad = fob_nad + freight_nad + insurance_nad
+    else:
+        # ---- advanced entry: granular FOB + freight (the broker's view) ----
+        fob_nad      = fob_usd * fx
+        freight_nad  = freight_usd * fx
+        insurance_nad = (fob_nad + freight_nad) * (R.INSURANCE_PCT["value"] / 100.0)
+        cif_nad      = fob_nad + freight_nad + insurance_nad
+
+    # What the user actually saw, for the result header ("You saw X USD FOB/CIF").
+    if price_usd_raw not in (None, ""):
+        saw_usd = float(price_usd_raw)
+        saw_label = "CIF" if price_type == "cif" else "FOB"
+        saw_nad = cif_nad if price_type == "cif" else fob_nad
+    else:
+        saw_usd = float(form.get("fob_usd", 0))
+        saw_label = "FOB"
+        saw_nad = fob_nad
 
     duty_nad   = cif_nad * (duty_pct / 100.0)
     # Ad valorem excise: A proxied as CIF. Formula floored at 0%, capped 30%.
@@ -96,12 +134,16 @@ def calc_landed_cost(form):
         })
 
     meta = {
-        "fob_usd": fob_usd,
+        "saw_usd": saw_usd,
+        "saw_label": saw_label,
+        "saw_nad": saw_nad,
         "fx": fx,
         "duty_pct": duty_pct,
         "excise_pct": round(excise_pct, 3),
         "cif_nad": cif_nad,
         "fob_nad": fob_nad,
+        "price_type": price_type,
+        "origin": origin,
     }
     return display, landed, meta
 
